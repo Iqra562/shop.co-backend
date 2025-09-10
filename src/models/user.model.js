@@ -1,8 +1,18 @@
 import mongoose , {Schema} from "mongoose";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
+
+const addressSchema = new mongoose.Schema({
+  phone: { type: String, required: true },
+  street: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String },
+  postalCode: { type: String, required: true },
+  country: { type: String, required: true },
+});
+
 const userSchema = new Schema({
-     username:{
+     name:{
        type:String,
        required:true,
        unique:true,
@@ -19,32 +29,23 @@ const userSchema = new Schema({
        trim:true,
 
      },
-     fullName:{
-       type:String,
-       required:true,
-       trim:true,
-       index:true
-
-     },
      avatar:{
         type:String,
      },
-     coverImage:{
-        type:String,
-     },
-     watchHistory:[
-        {
-            type:Schema.Types.ObjectId,
-            ref:"Video"
-        }
-     ],
+   
      password:{
         type:String,
         required:[true,"Password is required"]
      },
+        addresses: [addressSchema],
      refreshToken:{
         type:String
-     }
+     },
+       role: {
+      type: String,
+      enum: ["customer", "admin"],
+      default: "customer",
+    },
 },{timestamps:true})
 
 userSchema.pre("save",async function(next){
