@@ -23,8 +23,15 @@ import fs from 'fs'
         }
     }
     
+ const removeFromCloudinary = async (publicId) => {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId,{ invalidate: true });
+    return result;
+  } catch (error) {
+    console.error("Cloudinary delete error:", error.message);
+    return null;
+  }
+};
 
-      
 
-
-    export {uploadOnCloudinary}
+    export {uploadOnCloudinary,removeFromCloudinary}

@@ -1,28 +1,43 @@
 import mongoose from "mongoose";
-
+const ratingSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, trim: true },
+  },
+  { timestamps: true }  
+);
 const productSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
+    name: { type: String, required: true, trim: true }, 
     description: { type: String, required: true },
 
     price: { type: Number, required: true },
-    discountPrice: { type: Number }, // optional discounted price
+    discountPrice: {
+      type: Number,
+      default: null, 
+      validate: {
+        validator: function (v) { 
+          return v == null || v <= this.price;
+        },
+        message: "Discount price must be less than or equal to price",
+      },
+    },
 
     stock: { type: Number, required: true, default: 0 }, 
+   thumbnail: {
+    url: { type: String, required: true },
+    public_id: { type: String, required: true }
+  },
 
-    images: [{ type: String }], 
-    thumbnail: { type: String }, 
+   galleryImages: [
+    {
+      url: { type: String },
+      public_id: { type: String }
+    }
+  ],
 
-
-
-    ratings: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rating: { type: Number, min: 1, max: 5 },
-        comment: { type: String },
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
+    ratings: [ratingSchema],
 
 
   },

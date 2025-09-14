@@ -8,14 +8,12 @@ const addressSchema = new mongoose.Schema({
   city: { type: String, required: true },
   state: { type: String },
   postalCode: { type: String, required: true },
-  country: { type: String, required: true },
 });
 
 const userSchema = new Schema({
      name:{
        type:String,
        required:true,
-       unique:true,
        lowercase:true,
        trim:true,
        index:true,
