@@ -2,6 +2,7 @@ import { Router } from "express";
 import { addProduct, deleteProduct, getProduct, getProductById, removeGalleryImage, updateProduct } from "../controllers/product.controller.js";
 import { authorizeRoles, verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { addToWishlist, getWishlist, removeFromWishlist } from "../controllers/wishlist.controller.js";
 
 const router = Router();
 
@@ -22,7 +23,9 @@ router.route('/update-product/:id').put(verifyJWT, authorizeRoles("admin"), uplo
 
 router.route('/update-product/:id/remove-img/:publicId').put(verifyJWT, authorizeRoles("admin"), removeGalleryImage)
 router.route('/delete-product/:id').delete(verifyJWT, authorizeRoles("admin"), deleteProduct)
-
+router.route('/add-to-wishlist/:productId').post(verifyJWT,addToWishlist   )
+router.route('/remove-from-wishlist/:productId').post(verifyJWT,removeFromWishlist    )
+router.route('/get-wishlist').get(verifyJWT,getWishlist    )
 
 
 export default router;
