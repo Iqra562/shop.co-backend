@@ -1,0 +1,49 @@
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { Cart } from "../models/cart.model.js";
+import { Product } from "../models/product.model.js";
+const addToCart = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const { productId } = req.params;
+    const quantity = req.body?.quantity || 1;
+    if (!productId) {
+        throw new ApiError(404, "Product ID is required.")
+    }
+    if (quantity < 1) {
+        throw new ApiError(400, "Quantity must be at least 1");
+    }
+    const product = await Product.findById(productId)
+    let cart = await Cart.findOne({ user: userId });
+    if (!cart) {
+        cart = await Cart.create({
+            user: userId,
+            items: [{ product: productId, quantity }],
+        })
+    } else {
+        const existingItem = cart.items.find((item) => item.product.toString() === productId.toString());
+
+
+        if (existingItem) {
+            if(product.stock >= quantity){
+
+                existingItem.quantity = quantity;
+            }else{
+                throw new ApiError(404,"Stock is low! ")
+            }
+
+        } else {
+            cart.items.push({ product: productId, quantity });
+        }
+        await cart.save();
+    }
+
+    return res.status(200).json({
+        success: true,
+        cart,
+        message: "Product added and updaated in cart successfully",
+    });
+})
+
+export {
+    addToCart
+}

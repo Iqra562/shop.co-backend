@@ -3,6 +3,7 @@ import { addProduct, deleteProduct, getProduct, getProductById, removeGalleryIma
 import { authorizeRoles, verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { addToWishlist, getWishlist, removeFromWishlist } from "../controllers/wishlist.controller.js";
+import { addToCart } from "../controllers/cart.controller.js";
 
 const router = Router();
 
@@ -26,6 +27,6 @@ router.route('/delete-product/:id').delete(verifyJWT, authorizeRoles("admin"), d
 router.route('/add-to-wishlist/:productId').post(verifyJWT,addToWishlist   )
 router.route('/remove-from-wishlist/:productId').post(verifyJWT,removeFromWishlist    )
 router.route('/get-wishlist').get(verifyJWT,getWishlist    )
-
+router.route('/add-to-cart/:productId').post(verifyJWT,addToCart)
 
 export default router;
