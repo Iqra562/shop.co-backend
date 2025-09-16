@@ -3,7 +3,7 @@ import { addProduct, deleteProduct, getProduct, getProductById, removeGalleryIma
 import { authorizeRoles, verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { addToWishlist, getWishlist, removeFromWishlist } from "../controllers/wishlist.controller.js";
-import { addToCart } from "../controllers/cart.controller.js";
+import { addToCart, fetchCart, removeFromCart } from "../controllers/cart.controller.js";
 
 const router = Router();
 
@@ -28,5 +28,7 @@ router.route('/add-to-wishlist/:productId').post(verifyJWT,addToWishlist   )
 router.route('/remove-from-wishlist/:productId').post(verifyJWT,removeFromWishlist    )
 router.route('/get-wishlist').get(verifyJWT,getWishlist    )
 router.route('/add-to-cart/:productId').post(verifyJWT,addToCart)
+router.route('/remove-from-cart/:productId').post(verifyJWT,removeFromCart)
+router.route('/fetch-cart').get(verifyJWT,fetchCart)
 
 export default router;
