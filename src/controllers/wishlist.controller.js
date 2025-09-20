@@ -47,7 +47,7 @@ const removeFromWishlist = asyncHandler(async (req,res)=>{
    return res.status(200).json(
     new ApiResponse(200, wishlist, "Product removed from wishlist successfully")
   );
-})
+}) 
 
 const getWishlist = asyncHandler(async (req,res)=>{
       const userId= req.user._id;
