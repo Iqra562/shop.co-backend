@@ -8,7 +8,7 @@ dotenv.config({
     path:'./env'
 })
 connectDB()
-.then(()=>{
+.then(()=>{ 
       app.on("errror",(error)=>{
         console.log("ERR",error )
         throw error
