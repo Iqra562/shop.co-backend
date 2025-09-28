@@ -219,6 +219,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
                   new ApiResponse(200, user, "Avatar file uploaded succesfully")
             )
 })
+ const checkAuth = asyncHandler(async (req, res) => {
+  res.status(200).json(
+ new ApiResponse(200, req.user, "authenticated user ")
+  );
+});
+
 
 export {
       registerUser,
@@ -228,5 +234,6 @@ export {
       changeCurrentPassword,
       getCurrentUser,
       updateAccountDetails,
-      updateUserAvatar
+      updateUserAvatar,
+      checkAuth
 }
