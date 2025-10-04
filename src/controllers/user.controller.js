@@ -19,7 +19,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
       }
 }
 
-
+ 
 const registerUser = asyncHandler(async (req, res) => {
       const { name, email, password ,role} = req.body
       console.log("email:", email)
@@ -28,7 +28,7 @@ const registerUser = asyncHandler(async (req, res) => {
       }
       const existedUser = await User.findOne({ email })
       if (existedUser) {
-            throw new ApiError(409, "User with email  already exists")
+            throw new ApiError(409, "User with email  already exists", "EMAIL_ALREADY_EXISTS")
       }
 
 
@@ -43,29 +43,35 @@ const registerUser = asyncHandler(async (req, res) => {
             "-password -refreshToken"
       )
       if (!createdUser) {
-            throw new ApiError(500, "Something went wrong")
+            throw new ApiError(500, "Something went wrong!")
 
       }
-      return res.status(201).json(
-            new ApiResponse(200, createdUser, "User registered successfully  ")
+       const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(createdUser._id)
+      const loggedInUser = await User.findById(createdUser._id).select("-password -refreshToken")
+      const options = {
+            httpOnly: true,
+            secure: true
+      }
+      return res.status(201).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json(
+            new ApiResponse(200, loggedInUser, "User registered successfully  ")
       )
 })
 
 const loginUser = asyncHandler(async (req, res) => {
       const { email, password } = req.body
       if (!(email)) {
-            throw new ApiError(400, "email is required")
+            throw new ApiError(400,  "Email is required" ,"EMAIL_REQUIRED")
       }
 
       const user = await User.findOne( { email })
 
       if (!user) {
-            throw new ApiError(404, "User doesn't exist")
+            throw new ApiError(404, "User doesnt exist","INVALID_EMAIL")
       }
 
       const isPasswordValid = await user.isPasswordCorrect(password)
       if (!isPasswordValid) {
-            throw new ApiError(401, "invalid user  ")
+            throw new ApiError(401, { password: "Password is invalid" },"INVALID_PASSWORD")
       }
       const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
       const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
@@ -102,7 +108,7 @@ const logoutUser = asyncHandler(async (req, res) => {
       }
 
       return res
-            .status(200)
+            .status(200)      
             .clearCookie("accessToken", options)
             .clearCookie("refreshToken", options)
             .json(new ApiResponse(200, {}, "User logged out"))
