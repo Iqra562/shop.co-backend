@@ -50,7 +50,9 @@ const registerUser = asyncHandler(async (req, res) => {
       const loggedInUser = await User.findById(createdUser._id).select("-password -refreshToken")
       const options = {
             httpOnly: true,
-            secure: true
+            secure: true,
+              sameSite: "None",   
+
       }
       return res.status(201).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json(
             new ApiResponse(200, loggedInUser, "User registered successfully  ")
@@ -77,7 +79,9 @@ const loginUser = asyncHandler(async (req, res) => {
       const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
       const options = {
             httpOnly: true,
-            secure: true
+            secure: true,
+              sameSite: "None",  
+
       }
       return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json(
             new ApiResponse(200,
