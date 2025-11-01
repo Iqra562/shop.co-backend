@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { Order } from "../models/order.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import {Product} from "../models/product.model.js"
+import {Product} from "../models/product.model.js" 
 const createOrder = asyncHandler(async(req,res)=>{
   const userId= req.user._id;
   const {itemDetails,shippingAddress} = req.body;
@@ -11,18 +11,19 @@ const createOrder = asyncHandler(async(req,res)=>{
          false, message: "No items in order" });
   }
     const orderItems = itemDetails.map(item => ({
-    productId: item.productId,
-    price: item.price,
+    productId: item.product._id,
+    name:item.product.name,
+    price: item.product.price,
     quantity: item.quantity,
-    total: item.price * item.quantity,
+    total: item.product.price * item.quantity,
   }));
 
-   const totalAmount = orderItems.reduce((acc, item) => acc + item.total, 0);
+  const totalAmount = orderItems.reduce((acc, item) => acc + item.total, 0);
 
   const createOrder = await Order.create({
     user:userId,
     items:orderItems,
-    shippingAddress:shippingAddress,
+    // shippingAddress:shippingAddress,
     totalAmount 
   })
   return res.status(201).json(

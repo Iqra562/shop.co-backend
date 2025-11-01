@@ -24,17 +24,16 @@ const addToCart = asyncHandler(async (req, res) => {
         const existingItem = cart.items.find((item) => item.product.toString() === productId.toString());
 
 
-        if (existingItem) {  
-            if(quantity >15)
-                {
-                                    throw new ApiError(404,"Maximum quantity is 15","Max_Quantity")
+        if (existingItem) {
+            if (quantity > 15) {
+                throw new ApiError(404, "Maximum quantity is 15", "Max_Quantity")
 
             }
-            if(product.stock >= quantity){
+            if (product.stock >= quantity) {
 
                 existingItem.quantity = quantity;
-            }else{
-                throw new ApiError(404,"Stock is low! ","LOW_STOCK")
+            } else {
+                throw new ApiError(404, "Stock is low! ", "LOW_STOCK")
             }
 
         } else {
@@ -42,43 +41,43 @@ const addToCart = asyncHandler(async (req, res) => {
         }
         await cart.save();
     }
-  const updatedCart = await Cart.findById(cart._id).populate("items.product");
+    const updatedCart = await Cart.findById(cart._id).populate("items.product");
 
     return res.status(200).json({
         success: true,
-        cart:updatedCart,
+        cart: updatedCart,
         message: "Product added and updaated in cart successfully",
     });
 })
-    const removeFromCart = asyncHandler(async(req,res)=>{
+const removeFromCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-        const { cartItemId } = req.body;
-        const cart= await Cart.findOne({user:userId});
-        if(!cart){
-            throw new ApiError(404,"Cart not found!");
+    const { cartItemId } = req.body;
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart) {
+        throw new ApiError(404, "Cart not found!");
 
-        }
+    }
 
-    cart.items = cart.items.filter((item)=>item._id.toString() !== cartItemId.toString())
-                await cart.save();
+    cart.items = cart.items.filter((item) => item._id.toString() !== cartItemId.toString())
+    await cart.save();
     res.status(200).json({
         success: true,
         message: "Item removed from cart",
         cart,
     });
-    })
-const fetchCart = asyncHandler(async(req,res)=>{
-   const  userId = req.user._id;
-   const cart = await Cart.findOne( { user: userId }).populate("items.product");
-   if(!cart){
-    throw new ApiError(404,"Cart not found!");
-     
-   }
-    return res.status(200).json(
-    new ApiResponse(200, cart, "Cart fetched successfully")
-  );
+})
+const fetchCart = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+    if (!cart) {
+        throw new ApiError(404, "Cart not found!");
 
-}) 
+    }
+    return res.status(200).json(
+        new ApiResponse(200, cart, "Cart fetched successfully")
+    );
+
+})
 export {
     addToCart,
     removeFromCart,
