@@ -1,10 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 
-const orderItemSchema = new mongoose.Schema({
+const orderItemSchema = new mongoose.Schema({ 
   productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
   productName: String,
   price: Number,
   quantity: Number,
+  thumbnail:String,
   total: Number,
   status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" }
 });

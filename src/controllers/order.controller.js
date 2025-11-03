@@ -12,9 +12,10 @@ const createOrder = asyncHandler(async(req,res)=>{
   }
     const orderItems = itemDetails.map(item => ({
     productId: item.product._id,
-    name:item.product.name,
+    productName:item.product.name,
     price: item.product.price,
     quantity: item.quantity,
+    thumbnail:item.product.thumbnail.url,
     total: item.product.price * item.quantity,
   }));
 
@@ -44,8 +45,8 @@ const orders = await Order.find({ user: userId});;
 
 })
 const getOrderById = asyncHandler(async(req,res)=>{
-  const { userId } = req.params;
-const orders = await Order.find({ user: userId});;
+  const  userId  = req.user._id;
+const orders = await Order.find({ user: userId});
  if(!orders){
   throw new ApiError(404, "orders not found");
       }
