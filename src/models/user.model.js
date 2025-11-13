@@ -11,7 +11,7 @@ const addressSchema = new mongoose.Schema({
   postalCode: { type: String, required: true },
 });
 
-const userSchema = new Schema({
+const userSchema = new Schema({ 
      name:{
        type:String,
        required:true,

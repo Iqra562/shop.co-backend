@@ -6,7 +6,7 @@ const orderItemSchema = new mongoose.Schema({
   price: Number,
   quantity: Number,
   thumbnail:String,
-  total: Number,
+  total: Number, 
   status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" }
 });
 const addressSchema = new mongoose.Schema({ 

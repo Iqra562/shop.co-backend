@@ -10,7 +10,7 @@ export const errorHandler = (err, req, res, next) => {
       code:err.code,
       errors: err.errors || [],
     });
-  } 
+  }  
 
   res.status(500).json({
     success: false,

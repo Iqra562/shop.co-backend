@@ -10,6 +10,17 @@ const createOrder = asyncHandler(async(req,res)=>{
     return res.status(400).json({ success:
          false, message: "No items in order" });
   }
+  const invalidItems = itemDetails.filter(item => 
+    !item.product || !item.product._id || !item.product.price
+  );
+  
+  if (invalidItems.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Some items are missing product information"
+    });
+  }
+
     const orderItems = itemDetails.map(item => ({
     productId: item.product._id,
     productName:item.product.name,
@@ -36,7 +47,7 @@ const getOrder = asyncHandler(async(req,res)=>{
 const userId = req.user._id;
 const orders = await Order.find({ user: userId});;
  if(!orders){
-  throw new ApiError(404, "Wishlist not found");
+  throw new ApiError(404, "orders not found");
       }
 
       return res.status(200).json(
