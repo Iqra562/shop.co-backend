@@ -181,10 +181,14 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
+      const userId = req.user._id;
+      const userData = await User.findById(userId).select("-password -refreshToken")
       return res
             .status(200)
-            .json(200, req.user, "Current user fetched successfully")
+            .json(new ApiResponse(200, userData, "Authenticated user data"))
 })
+
+
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
       const { fullName, email } = req.body
@@ -206,6 +210,85 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       return res
             .status(200)
             .json(new ApiResponse(200, user, "Account details updated successfully"))
+})
+const addAddress = asyncHandler(async (req, res) => {
+      const userId = req.user._id;
+
+      const newAddress = {
+            fullName: req.body.fullName,
+            phone: req.body.phone,
+            street: req.body.street,
+            city: req.body.city,
+            state: req.body.state,
+            postalCode: req.body.postalCode
+      };
+
+      const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $push: { address: newAddress } },
+            { new: true, select: "-password -refreshToken" }
+      );
+
+      return res
+            .status(200)
+            .json(new ApiResponse(200, updatedUser, "Address added successfully"));
+});
+
+const updateAddress = asyncHandler(async (req, res) => {
+      const userId = req.user._id;
+      const addressId = req.params.id;
+      if (!addressId) {
+            throw new ApiError(400, "Address not found", "ADDRESS_REQUIRED")
+
+      }
+      const updatedAddress = {
+            fullName: req.body.fullName,
+            contact: req.body.phone,
+            street: req.body.street,
+            city: req.body.city,
+            state: req.body.state,
+            postalCode: req.body.postalCode
+      };
+      const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                  $set: {
+                        "address.$[elem]": updatedAddress
+                  }
+            },
+            {
+                  arrayFilters: [{ "elem._id": addressId }],
+                  new: true,
+                  select: "-password -refreshToken"
+            }
+      );
+
+      return res
+            .status(200)
+            .json(new ApiResponse(200, updatedUser, "Address updated successfully"));
+})
+
+const deleteAddress = asyncHandler(async (req, res) => {
+      const userId = req.user._id;
+      //   const  = req.params.id;
+      const { id: addressId } = req.params;
+
+      if (!addressId) {
+            throw new ApiError(400, "Address not found", "ADDRESS_REQUIRED")
+
+      }
+      const result = await User.updateOne(
+            { _id: userId }, {
+            $pull: { address: { _id: addressId } }
+      }
+      )
+      if (result.modifiedCount === 0) {
+            throw new ApiError(404, "Address not found or already deleted", "ADDRESS_NOT_FOUND");
+      }
+
+      return res
+            .status(200)
+            .json(new ApiResponse(200, address, "User address deleted successfully"))
 })
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
@@ -251,5 +334,7 @@ export {
       getCurrentUser,
       updateAccountDetails,
       updateUserAvatar,
-      checkAuth
+      checkAuth, addAddress,
+      updateAddress,
+      deleteAddress
 }

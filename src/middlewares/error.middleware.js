@@ -9,7 +9,7 @@ export const errorHandler = (err, req, res, next) => {
       message: err.message,
       code:err.code,
       errors: err.errors || [],
-    });
+    }); 
   }  
 
   res.status(500).json({

@@ -12,7 +12,7 @@ class ApiError extends  Error{
         this.message = message,
         this.code = code,
         this.success  = false,
-        this.errors = errors
+        this.errors = errors 
     }
 }
 
