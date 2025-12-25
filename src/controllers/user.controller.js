@@ -258,22 +258,20 @@ const updateAddress = asyncHandler(async (req, res) => {
       const userId = req.user._id;
       const addressId = req.params.id;
       if (!addressId) {
-            throw new ApiError(400, "Address not found", "ADDRESS_REQUIRED")
+            throw new ApiError(400, "Address ID is required", "ADDRESS_REQUIRED")
 
       }
-      const updatedAddress = {
-            fullName: req.body.fullName,
-            phone: req.body.phone,
-            street: req.body.street,
-            city: req.body.city,
-            state: req.body.state,
-            postalCode: req.body.postalCode
-      };
-      const updatedUser = await User.findByIdAndUpdate(
+   
+      const updatedUser = await User.findOneAndUpdate(
  { _id: userId, "address._id": addressId },            {
                  $set: {
-        "address.$": updatedAddress,
-      },
+      "address.$.fullName": req.body.fullName,
+      "address.$.phone": req.body.phone,
+      "address.$.street": req.body.street,
+      "address.$.city": req.body.city,
+      "address.$.state": req.body.state,
+      "address.$.postalCode": req.body.postalCode,
+    },
             },
             {
                    new: true,
@@ -281,6 +279,10 @@ const updateAddress = asyncHandler(async (req, res) => {
                   select: "-password -refreshToken"
             }
       );
+      
+  if (!updatedUser) {
+    throw new ApiError(404, "Address not found", "ADDRESS_NOT_FOUND");
+  }
 
       return res
             .status(200)
