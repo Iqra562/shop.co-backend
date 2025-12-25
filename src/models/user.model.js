@@ -2,50 +2,58 @@ import mongoose , {Schema} from "mongoose";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 
-const addressSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  phone: { type: String, required: true },
-  street: { type: String, required: true },
-  city: { type: String, required: true },
-  state: { type: String },
-  postalCode: { type: String, required: true },
-});
+   const addressSchema = new mongoose.Schema({
+   fullName: { type: String, required: true },
+   phone: { type: String, required: true },
+   street: { type: String, required: true },
+   city: { type: String, required: true },
+   state: { type: String },
+   postalCode: { type: String, required: true },
+   });
 
-const userSchema = new Schema({ 
-     name:{
-       type:String,
-       required:true,
-       lowercase:true,
-       trim:true,
-       index:true,
+   const userSchema = new Schema({ 
+      name:{
+         type:String,
+         required:true,
+         lowercase:true,
+         trim:true,
+         index:true,
 
-     },
-     email:{
-       type:String,
-       required:true,
-       unique:true,
-       lowercase:true,
-       trim:true,
+      },
+      email:{
+         type:String,
+         required:true,
+         unique:true,
+         lowercase:true,
+         trim:true,
 
-     },
-     avatar:{
-        type:String,
-     },
-     
-     password:{
-        type:String,
-        required:[true,"Password is required"]
-     },
-        address: [addressSchema],
-     refreshToken:{
-        type:String
-     },
-       role: {
-      type: String,
-      enum: ["customer", "admin"],
-      default: "customer",
-    },
-},{timestamps:true})
+      },
+      avatar:{
+         type:String,
+      },
+      
+      password:{
+         type:String,
+         required:[true,"Password is required"]
+      },
+ address: {
+      type: [addressSchema],
+      validate: {
+        validator: function (value) {
+          return value.length <= 3;
+        },
+        message: "You can add a maximum of 3 addresses",
+      },
+    },         
+      refreshToken:{
+         type:String
+      },
+         role: {
+         type: String,
+         enum: ["customer", "admin"],
+         default: "customer",
+      },
+   },{timestamps:true})
 
 userSchema.pre("save",async function(next){
    if(!this.isModified("password")) return next();
