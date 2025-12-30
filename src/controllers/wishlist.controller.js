@@ -26,7 +26,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
 
 const removeFromWishlist = asyncHandler(async (req,res)=>{
       const userId = req.user._id;
-      const {productId} = req.body;
+      const {productId} = req.params;
       if (!productId) {
     throw new ApiError(400, "Product ID is required");
   }
