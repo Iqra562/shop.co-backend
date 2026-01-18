@@ -9,6 +9,7 @@ export const verifyJWT  = asyncHandler(async(req,_,next)=>{
          throw new ApiError(401, "Unauthorized request")
      }
      const decodedToken =  jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
+    
      const user  =await User.findById(decodedToken?._id).select("-password -refreshToken -address")
      if(!user){
      throw new ApiError(401, "Invalid Access Token")
@@ -28,3 +29,13 @@ export const authorizeRoles = (...roles) => {
     next();
   };
 };
+
+export const requireVerifiedUser =  (req,_,next)=>{
+  if(!req.user.isVerified){
+      return next(new ApiError(403, "User is not verified"));
+
+  }
+      next();
+
+  }
+

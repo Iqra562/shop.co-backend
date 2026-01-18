@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { ApiError } from '../utils/ApiError.js'
 import jwt from 'jsonwebtoken'
+import { sendVerificationMail } from '../utils/nodemailer.js'
 
 const generateAccessAndRefreshTokens = async (userId) => {
       try {
@@ -26,28 +27,39 @@ const registerUser = asyncHandler(async (req, res) => {
       if ([email, name, password].some((field) => field?.trim() === "")) {
             throw new ApiError(400, 'All feilds are required')
       }
-      const existedUser = await User.findOne({ email })
-      if (existedUser) {
+      let user = await User.findOne({ email })
+      
+
+      if(!user){
+
+      user = await  User.create({
+            name: name.toLowerCase(),
+                  email,
+                  password,
+                  role,
+                  
+            })
+            
+      }
+      if (user.isVerified) {
             throw new ApiError(409, "User with email  already exists", "EMAIL_ALREADY_EXISTS")
       }
+      const otpCode = user.generateOTP();
+      user.otpCode = user.hashOTP(otpCode);
 
+      user.otpExpiryDate = user.otpExpiry();
 
-      const user = await User.create({
-            email,
-            password,
-            name: name.toLowerCase(),
-            role
-      })
-
+      await user.save();
       const createdUser = await User.findById(user._id).select(
             "-password -refreshToken"
       )
+
       if (!createdUser) {
             throw new ApiError(500, "Something went wrong!")
 
       }
-      const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(createdUser._id)
-      const loggedInUser = await User.findById(createdUser._id).select("-password -refreshToken")
+      const { accessToken } = await generateAccessAndRefreshTokens(createdUser._id);
+      await sendVerificationMail(email, otpCode, user.otpExpiryDate)
       const options = {
             httpOnly: true,
             secure: true,
@@ -56,11 +68,57 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
       }
-      return res.status(201).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json(
-            new ApiResponse(200, loggedInUser, "User registered successfully  ")
+      return res.status(201).cookie("accessToken", accessToken, options).json(
+            new ApiResponse(201, null, "OTP sent successfully!")
       )
 })
+const verifyUser = asyncHandler(async (req, res) => {
+      const { otp } = req.body;
+      const user = req.user;
+ 
+      if (!otp) {
+            throw new ApiError(400, "OTP is required");
+      }
 
+      if (user.isVerified) {
+            throw new ApiError(400, "User already verified");
+      }
+      
+      if (!user.otpCode || user.otpExpiryDate < Date.now()) {
+            throw new ApiError(400, "OTP expired");
+      }
+      try {
+
+            const hashedOtp = user.hashOTP(otp);
+            if (hashedOtp !==  user.otpCode ) {
+                  throw new ApiError(400, 'Invalid OTP code')
+
+            }
+          
+            user.isVerified = true;
+            user.otpCode = undefined;
+            user.otpExpiryDate = undefined;
+            await user.save();
+           
+            const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+             const options = {
+                  httpOnly: true,
+                  secure: true,
+                  sameSite: "None",
+                  path: "/",
+
+
+            }
+
+            return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json(
+                  new ApiResponse(200, user, "User registered successfully  ")
+            )
+      } catch (error) {
+            throw new ApiError(401, error?.message || "Unauthorized user")
+      }
+
+})
 const loginUser = asyncHandler(async (req, res) => {
       const { email, password } = req.body
       if (!(email)) {
@@ -214,17 +272,17 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 const addAddress = asyncHandler(async (req, res) => {
       const userId = req.user._id;
       const user = await User.findById(userId).select("address");
-  if (!user) {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, null, "User not found"));
-  }
+      if (!user) {
+            return res
+                  .status(404)
+                  .json(new ApiResponse(404, null, "User not found"));
+      }
 
-  if (user.address.length >= 3) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, null, "Maximum 3 addresses allowed"));
-  }
+      if (user.address.length >= 3) {
+            return res
+                  .status(400)
+                  .json(new ApiResponse(400, null, "Maximum 3 addresses allowed"));
+      }
 
       const newAddress = {
             fullName: req.body.fullName,
@@ -261,28 +319,28 @@ const updateAddress = asyncHandler(async (req, res) => {
             throw new ApiError(400, "Address ID is required", "ADDRESS_REQUIRED")
 
       }
-   
+
       const updatedUser = await User.findOneAndUpdate(
- { _id: userId, "address._id": addressId },            {
-                 $set: {
-      "address.$.fullName": req.body.fullName,
-      "address.$.phone": req.body.phone,
-      "address.$.street": req.body.street,
-      "address.$.city": req.body.city,
-      "address.$.state": req.body.state,
-      "address.$.postalCode": req.body.postalCode,
-    },
+            { _id: userId, "address._id": addressId }, {
+            $set: {
+                  "address.$.fullName": req.body.fullName,
+                  "address.$.phone": req.body.phone,
+                  "address.$.street": req.body.street,
+                  "address.$.city": req.body.city,
+                  "address.$.state": req.body.state,
+                  "address.$.postalCode": req.body.postalCode,
             },
+      },
             {
-                   new: true,
-                         runValidators: true,
+                  new: true,
+                  runValidators: true,
                   select: "-password -refreshToken"
             }
       );
-      
-  if (!updatedUser) {
-    throw new ApiError(404, "Address not found", "ADDRESS_NOT_FOUND");
-  }
+
+      if (!updatedUser) {
+            throw new ApiError(404, "Address not found", "ADDRESS_NOT_FOUND");
+      }
 
       return res
             .status(200)
@@ -291,29 +349,29 @@ const updateAddress = asyncHandler(async (req, res) => {
 
 const deleteAddress = asyncHandler(async (req, res) => {
       const userId = req.user._id;
-       const { id: addressId } = req.params;
+      const { id: addressId } = req.params;
 
       if (!addressId) {
             throw new ApiError(400, "Address ID is required", "ADDRESS_REQUIRED")
 
       }
-     const updatedUser = await User.findOneAndUpdate(
-    { _id: userId, "address._id": addressId }, 
-    {
-      $pull: { address: { _id: addressId } },
-    },
-    {
-      new: true,
-      select: "-password -refreshToken",
-    }
-  );
-     if (!updatedUser) {
-    throw new ApiError(
-      404,
-      "Address not found or already deleted",
-      "ADDRESS_NOT_FOUND"
-    );
-  }
+      const updatedUser = await User.findOneAndUpdate(
+            { _id: userId, "address._id": addressId },
+            {
+                  $pull: { address: { _id: addressId } },
+            },
+            {
+                  new: true,
+                  select: "-password -refreshToken",
+            }
+      );
+      if (!updatedUser) {
+            throw new ApiError(
+                  404,
+                  "Address not found or already deleted",
+                  "ADDRESS_NOT_FOUND"
+            );
+      }
 
       return res
             .status(200)
@@ -356,6 +414,7 @@ const checkAuth = asyncHandler(async (req, res) => {
 
 export {
       registerUser,
+      verifyUser,
       loginUser,
       logoutUser,
       refreshAccessToken,

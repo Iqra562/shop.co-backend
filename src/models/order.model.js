@@ -21,7 +21,7 @@ const addressSchema = new mongoose.Schema({
 const orderSchema = new Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    items: [orderItemSchema],
+    items: [orderItemSchema ],
     // shippingAddress: addressSchema,
     paymentMethod: { type: String, enum: ["cod", "card", "paypal"] },
     paymentStatus: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
