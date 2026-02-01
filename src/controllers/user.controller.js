@@ -5,7 +5,7 @@ import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { ApiError } from '../utils/ApiError.js'
 import jwt from 'jsonwebtoken'
 import { sendVerificationMail } from '../utils/nodemailer.js'
-
+import {sendEmail} from '../utils/resend.js'
 const generateAccessAndRefreshTokens = async (userId) => {
       try {
             const user = await User.findById(userId);
@@ -16,9 +16,10 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
             return { accessToken, refreshToken }
       } catch (error) {
+            console.log(error)
             throw new ApiError(500, "Something went wrong while generating access and refresh tokens")
       }
-}
+} 
 
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -41,25 +42,30 @@ const registerUser = asyncHandler(async (req, res) => {
             })
             
       }
-      if (user.isVerified) {
+      if (user.isVerified ) {
             throw new ApiError(409, "User with email  already exists", "EMAIL_ALREADY_EXISTS")
       }
       const otpCode = user.generateOTP();
       user.otpCode = user.hashOTP(otpCode);
 
       user.otpExpiryDate = user.otpExpiry();
-
+ 
       await user.save();
       const createdUser = await User.findById(user._id).select(
             "-password -refreshToken"
       )
-
+ 
       if (!createdUser) {
             throw new ApiError(500, "Something went wrong!")
 
       }
       const { accessToken } = await generateAccessAndRefreshTokens(createdUser._id);
-      await sendVerificationMail(email, otpCode, user.otpExpiryDate)
+      const {data,error}= await sendEmail(email, otpCode, user.otpExpiryDate);
+      if(error){
+            console.log(error)
+            throw new ApiError(400, "error while sending otp!")
+
+      }
       const options = {
             httpOnly: true,
             secure: true,
