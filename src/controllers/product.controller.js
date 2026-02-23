@@ -1,124 +1,125 @@
+import { Category } from "../models/category.model.js";
 import { Product } from "../models/product.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { removeFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
-const getProduct = asyncHandler(async(req,res)=>{
-    const products =  await Product.find();
-    if(!products || products.length === 0){
-throw new ApiError(404,"No products found");
-    }
-    return res.status(200).json(
-        new ApiResponse(200,products,"Products fetched successfully")
-    )
+const getProduct = asyncHandler(async (req, res) => {
+  const products = await Product.find();
+  if (!products || products.length === 0) {
+    throw new ApiError(404, "No products found");
+  }
+  return res.status(200).json(
+    new ApiResponse(200, products, "Products fetched successfully")
+  )
 })
 const getProductById = asyncHandler(async (req, res) => {
-    const { id } = req.params; 
-    const product = await Product.findById(id);
+  const { id } = req.params;
+  const product = await Product.findById(id);
 
-    if (!product) {
-        throw new ApiError(404, "Product not found");
-    }
+  if (!product) {
+    throw new ApiError(404, "Product not found");
+  }
 
-    return res.status(200).json(
-        new ApiResponse(200, product, "Product fetched successfully")
-    );
+  return res.status(200).json(
+    new ApiResponse(200, product, "Product fetched successfully")
+  );
 });
 
 
 const addProduct = asyncHandler(async (req, res) => {
-    const { name, description, price, discountPrice, stock } = req.body;
-    if (
-        [name, description].some((field) => !field || field.trim() === "") ||
-        [price, stock].some((field) => field == null)
-    ) {
-        throw new ApiError(400, 'All feilds are required')
-    }
+  const { name, description, price, discountPrice, stock, category } = req.body;
+  if (
+    [name, description].some((field) => !field || field.trim() === "") ||
+    [price, stock,category].some((field) => field == null)
+  ) {
+    throw new ApiError(400, 'All feilds are required')
+  }
   // Upload thumbnail to Cloudinary
 
-     let thumbnail = null;
-     if(req.files?.thumbnail?.[0]){
-const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
-thumbnail = { url : uploadedThumbnail.secure_url, public_id : uploadedThumbnail.public_id}
-     }
+  let thumbnail = null;
+  if (req.files?.thumbnail?.[0]) {
+    const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
+    thumbnail = { url: uploadedThumbnail.secure_url, public_id: uploadedThumbnail.public_id }
+  }
 
-     if(!thumbnail){
-        throw new ApiError(400, "thumbnail file is required")
-      }
- // Upload multiple images (array of promises)
+  if (!thumbnail) {
+    throw new ApiError(400, "thumbnail file is required")
+  }
+  // Upload multiple images (array of promises)
   let imageUrls = [];
   if (req.files?.galleryImages) {
     // console.log(req.files?.galleryImages )
     imageUrls = await Promise.all(
-      req.files.galleryImages.map(async (file) =>{
+      req.files.galleryImages.map(async (file) => {
 
-       const uploaded  =   await uploadOnCloudinary(file.path);
-       if (!uploaded) {
-        throw new ApiError(500, "Failed to upload one of the images");
-      }
-       return { url : uploaded.secure_url, public_id : uploaded.public_id  }
+        const uploaded = await uploadOnCloudinary(file.path);
+        if (!uploaded) {
+          throw new ApiError(500, "Failed to upload one of the images");
         }
+        return { url: uploaded.secure_url, public_id: uploaded.public_id }
+      }
       )
     );
   }
   console.log("Images:", imageUrls);
 
 
-    const product = await Product.create({
-        name, description, price, discountPrice, stock,
-        thumbnail,
-         galleryImages: imageUrls
+  const product = await Product.create({
+    name, description, price, discountPrice, stock,
+    thumbnail,
+    galleryImages: imageUrls, category
 
-    })
-    const createdProduct = await Product.findById(product._id)
-    if (!createdProduct) {
-        throw new ApiError(500, "Something went wrong")
+  })
+  const createdProduct = await Product.findById(product._id)
+  if (!createdProduct) {
+    throw new ApiError(500, "Something went wrong")
 
-    }
+  }
 
-    return res.status(201).json(
-        new ApiResponse(200, createdProduct, "Product added successfully  ")
-    )
+  return res.status(201).json(
+    new ApiResponse(200, createdProduct, "Product added successfully  ")
+  )
 
 })
 
 
-const updateProduct = asyncHandler(async(req,res)=>{
+const updateProduct = asyncHandler(async (req, res) => {
 
-  const { id } = req.params; 
-    const product = await Product.findById(id);
-    if(!product){
-  throw new ApiError(404,"Product not found")
-    }
-   const { name, description, price, discountPrice, stock } = req.body;
-    if (
-        [name, description].some((field) => !field || field.trim() === "") ||
-        [price, stock].some((field) => field == null)
-    ) {
-        throw new ApiError(400, 'All feilds are required')
-    }
-     product.name = name;
-     product.description = description;
-     product.price = price;
-     product.discountPrice=discountPrice;
-     product.stock =stock;
+  const { id } = req.params;
+  const product = await Product.findById(id);
+  if (!product) {
+    throw new ApiError(404, "Product not found")
+  }
+  const { name, description, price, discountPrice, stock } = req.body;
+  if (
+    [name, description].some((field) => !field || field.trim() === "") ||
+    [price, stock].some((field) => field == null)
+  ) {
+    throw new ApiError(400, 'All feilds are required')
+  }
+  product.name = name;
+  product.description = description;
+  product.price = price;
+  product.discountPrice = discountPrice;
+  product.stock = stock;
 
 
-  if(req.files?.thumbnail?.[0]){
-const  uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
-if (product.thumbnail?.public_id) {
+  if (req.files?.thumbnail?.[0]) {
+    const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
+    if (product.thumbnail?.public_id) {
       await removeFromCloudinary(product.thumbnail.public_id);
     }
 
-product.thumbnail = {
-    url:uploadedThumbnail.secure_url,
-    public_id:uploadedThumbnail.public_id
-}
+    product.thumbnail = {
+      url: uploadedThumbnail.secure_url,
+      public_id: uploadedThumbnail.public_id
+    }
 
   }
 
-    // ✅ Handle new images (add to existing array)
+  // ✅ Handle new images (add to existing array)
   if (req.files?.galleryImages) {
     const uploadedImages = await Promise.all(
       req.files.galleryImages.map(async (file) => {
@@ -135,12 +136,38 @@ product.thumbnail = {
     new ApiResponse(200, product, "Product updated successfully")
   );
 
-   
+
 
 })
 
 
+const getProductByCategory =asyncHandler(async(req,res)=>{
+      const {maincategory, subcategory,leafcategory} = req.query;
+      const maincategoryId = await Category.findOne({name:maincategory});
+      console.log(maincategoryId)
+       if (!maincategoryId) {
+    return res.status(404).json({ message: "Main category not found" });
+  }
+      const subcategoryId = await Category.findOne({name:subcategory,parent:maincategoryId._id});
+       if (!subcategoryId) {
+    return res.status(404).json({ message: "Subcategory not found" });
+  }
+      const leafcategoryId = await Category.findOne({name:leafcategory,ancestors:{$all :[maincategoryId._id,subcategoryId._id]}});
+      if (!leafcategoryId) {
+    return res.status(404).json({ message: "Leaf category not found" });
+  }
+      const getProduct  = await Product.find({ category:leafcategoryId._id});
+        return res.status(200).json(
+    new ApiResponse(200, getProduct, "Product by category")
+  );
+}) 
 
+ const getOnSaleProduct = asyncHandler(async(req,res)=>{
+   const saleProduct = await Product.find({onsale:true});
+       return res.status(200).json(
+    new ApiResponse(200, saleProduct, "Product on sale")
+  );
+ })
 const removeGalleryImage = asyncHandler(async (req, res) => {
   const { id, publicId } = req.params;
 
@@ -168,25 +195,25 @@ const removeGalleryImage = asyncHandler(async (req, res) => {
   );
 });
 
-const deleteProduct = asyncHandler(async(req,res)=>{
-   const {id} = req.params;
-    const product = await Product.findById(id);
-   if(!product) {
-    throw new ApiError(404,"Product nt found");
+const deleteProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const product = await Product.findById(id);
+  if (!product) {
+    throw new ApiError(404, "Product nt found");
 
-   }
-    if (product.thumbnail?.public_id) {
+  }
+  if (product.thumbnail?.public_id) {
     await removeFromCloudinary(product.thumbnail.public_id);
   }
   if (product.galleryImages?.length) {
-  await Promise.all(
-    product.galleryImages
-      .filter(img => img.public_id)
-      .map(img => removeFromCloudinary(img.public_id))
-  );
-}
+    await Promise.all(
+      product.galleryImages
+        .filter(img => img.public_id)
+        .map(img => removeFromCloudinary(img.public_id))
+    );
+  }
 
-await product.deleteOne();
+  await product.deleteOne();
 
   return res.status(200).json({
     success: true,
@@ -195,11 +222,14 @@ await product.deleteOne();
 })
 
 
+
 export {
-    getProduct,
-    getProductById,
-    addProduct,
-    updateProduct,
-    removeGalleryImage,
-    deleteProduct
+  getProduct,
+  getProductById,
+  addProduct,
+  updateProduct,
+  removeGalleryImage,
+  deleteProduct,
+  getProductByCategory,
+  getOnSaleProduct
 }

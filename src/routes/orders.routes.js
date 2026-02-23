@@ -4,10 +4,10 @@ import { createOrder, getOrder, getOrderById, updateOrderStatus, updatePaymentMe
 
 const router = Router();
 
-router.route('/create-order').post(verifyJWT,requireVerifiedUser,createOrder)
-router.route('/get-order').get(verifyJWT,requireVerifiedUser,getOrder)
-router.route('/get-order-by-id').get(verifyJWT,requireVerifiedUser,getOrderById)
-router.route('/update-payment-method').put(verifyJWT,requireVerifiedUser,updatePaymentMethod)
-router.route('/update-payment-status/:orderId').put(verifyJWT,requireVerifiedUser,updatePaymentStatus)
-router.route('/update-order-status/:orderId').put(verifyJWT,requireVerifiedUser,updateOrderStatus)
+router.route('/create-order').post(verifyJWT,createOrder)
+router.route('/get-order').get(verifyJWT,getOrder)
+router.route('/get-order-by-id').get(verifyJWT,getOrderById)
+router.route('/update-payment-method').put(verifyJWT,updatePaymentMethod)
+router.route('/update-payment-status/:orderId').put(verifyJWT,updatePaymentStatus)
+router.route('/update-order-status/:orderId').put(verifyJWT,updateOrderStatus)
 export default router

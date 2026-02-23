@@ -20,11 +20,13 @@ import productRouter from './routes/product.routes.js'
 import wishlistRouter from './routes/wishlist.routes.js'
 import cartRouter from './routes/cart.routes.js'
 import ordersRouter from './routes/orders.routes.js'
+import categoryRouter from './routes/category.routes.js'
 app.use('/api/v1/users',userRouter);
 app.use('/api/v1/products',productRouter);
 app.use('/api/v1/wishlist',wishlistRouter);
 app.use('/api/v1/cart',cartRouter);
 app.use('/api/v1/orders',ordersRouter);
+app.use('/api/v1/category',categoryRouter);
 
 app.use(errorHandler);
 export {app}

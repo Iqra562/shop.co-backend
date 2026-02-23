@@ -37,20 +37,19 @@ const registerUser = asyncHandler(async (req, res) => {
             name: name.toLowerCase(),
                   email,
                   password,
-                  role,
-                  
+                   
             })
             
       }
-      if (user.isVerified ) {
-            throw new ApiError(409, "User with email  already exists", "EMAIL_ALREADY_EXISTS")
-      }
-      const otpCode = user.generateOTP();
-      user.otpCode = user.hashOTP(otpCode);
+      // if (user.isVerified ) {
+      //       throw new ApiError(409, "User with email  already exists", "EMAIL_ALREADY_EXISTS")
+      // }
+      // const otpCode = user.generateOTP();
+      // user.otpCode = user.hashOTP(otpCode);
 
-      user.otpExpiryDate = user.otpExpiry();
+      // user.otpExpiryDate = user.otpExpiry();
  
-      await user.save();
+      // await user.save();
       const createdUser = await User.findById(user._id).select(
             "-password -refreshToken"
       )
@@ -60,12 +59,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
       }
       const { accessToken } = await generateAccessAndRefreshTokens(createdUser._id);
-      const {data,error}= await sendEmail(email, otpCode, user.otpExpiryDate);
-      if(error){
-            console.log(error)
-            throw new ApiError(400, "error while sending otp!")
+      // const {data,error}= await sendEmail(email, otpCode, user.otpExpiryDate);
+      // if(error){
+      //       console.log(error)
+      //       throw new ApiError(400, "error while sending otp!")
 
-      }
+      // }
       const options = {
             httpOnly: true,
             secure: true,

@@ -3,7 +3,7 @@ import { requireVerifiedUser, verifyJWT } from "../middlewares/auth.middleware.j
 import { addToWishlist, getWishlist, removeFromWishlist } from "../controllers/wishlist.controller.js";
 
 const router = Router();
-router.route('/').get(verifyJWT,requireVerifiedUser,getWishlist )
-router.route('/').post(verifyJWT,requireVerifiedUser,addToWishlist )
-router.route('/:productId').delete(verifyJWT,requireVerifiedUser,removeFromWishlist )
+router.route('/').get(verifyJWT,getWishlist )
+router.route('/').post(verifyJWT,addToWishlist )
+router.route('/:productId').delete(verifyJWT,removeFromWishlist )
 export default router;
