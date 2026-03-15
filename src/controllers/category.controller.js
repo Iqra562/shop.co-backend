@@ -29,8 +29,24 @@ const addCategory = asyncHandler(async (req, res) => {
     )
 })
 
+const fetchParentCategories =asyncHandler(async (req,res)=>{
+         const categories = await Category.find({parent:null});
+         return res.status(200).json(
+            new ApiResponse(200, categories,"Parent categories fetched successfully!")
+         )
+})
+const fetchSubCategories =asyncHandler(async (req,res)=>{
+    const { parentId } = req.params;
+         const subCategories = await Category.find({parent:parentId});
+         return res.status(200).json(
+            new ApiResponse(200, subCategories,"Subcategories fetched successfully!")
+         )
+})
+
 
 
 export {
-    addCategory
+    addCategory,
+fetchParentCategories,
+fetchSubCategories
 }

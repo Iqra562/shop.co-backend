@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { addCategory } from "../controllers/category.controller.js";
+import { addCategory, fetchSubCategories } from "../controllers/category.controller.js";
+import { fetchParentCategories } from "../controllers/category.controller.js";
 const router= Router();
 router.route('/').post(addCategory)
+ 
+router.route('/').get(fetchParentCategories);
+router.route('/sub/:parentId').get(fetchSubCategories);
 
-export default router;
+ export default router;

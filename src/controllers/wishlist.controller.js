@@ -47,7 +47,7 @@ const removeFromWishlist = asyncHandler(async (req,res)=>{
   );
 }) 
 
-
+ 
 
 
 const getWishlist = asyncHandler(async (req,res)=>{
@@ -55,7 +55,7 @@ const getWishlist = asyncHandler(async (req,res)=>{
       const wishlist = await Wishlist.findOne({user:userId})
       .populate("products")
       if(!wishlist){
-  throw new ApiError(404, "Wishlist not found");
+  throw new ApiError(404,[], "Wishlist not found");
       }
 
       return res.status(200).json(

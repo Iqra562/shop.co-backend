@@ -164,6 +164,9 @@ const getProductByCategory =asyncHandler(async(req,res)=>{
 
  const getOnSaleProduct = asyncHandler(async(req,res)=>{
    const saleProduct = await Product.find({onsale:true});
+    if (!saleProduct) {
+    throw new ApiError(404, "Products are not on sale   ")
+  }
        return res.status(200).json(
     new ApiResponse(200, saleProduct, "Product on sale")
   );
