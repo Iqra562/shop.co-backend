@@ -36,7 +36,9 @@ const fetchParentCategories =asyncHandler(async (req,res)=>{
          )
 })
 const fetchSubCategories =asyncHandler(async (req,res)=>{
+    console.log("CategoryId:", req.params.parentId);
     const { parentId } = req.params;
+
          const subCategories = await Category.find({parent:parentId});
          return res.status(200).json(
             new ApiResponse(200, subCategories,"Subcategories fetched successfully!")
