@@ -7,4 +7,4 @@ router.route('/').post(addCategory)
 router.route('/').get(fetchParentCategories);
 router.route('/sub/:parentId').get(fetchSubCategories);
 
- export default router;
+ export default router; 

@@ -32,7 +32,7 @@ const addProduct = asyncHandler(async (req, res) => {
   const { name, description, price, discountPrice, stock, category } = req.body;
   if (
     [name, description].some((field) => !field || field.trim() === "") ||
-    [price, stock,category].some((field) => field == null)
+    [price, stock, category].some((field) => field == null)
   ) {
     throw new ApiError(400, 'All feilds are required')
   }
@@ -141,36 +141,37 @@ const updateProduct = asyncHandler(async (req, res) => {
 })
 
 
-const getProductByCategory =asyncHandler(async(req,res)=>{
-      const {maincategory, subcategory,leafcategory} = req.query;
-      const maincategoryId = await Category.findOne({name:maincategory});
-      console.log(maincategoryId)
-       if (!maincategoryId) {
+const getProductByCategory = asyncHandler(async (req, res) => {
+  const { maincategory, subcategory, leafcategory } = req.query;
+  const maincategoryId = await Category.findOne({ name: maincategory });
+  console.log(maincategoryId)
+  if (!maincategoryId) {
     return res.status(404).json({ message: "Main category not found" });
   }
-      const subcategoryId = await Category.findOne({name:subcategory,parent:maincategoryId._id});
-       if (!subcategoryId) {
+  const subcategoryId = await Category.findOne({ name: subcategory, parent: maincategoryId._id });
+  if (!subcategoryId) {
     return res.status(404).json({ message: "Subcategory not found" });
   }
-      const leafcategoryId = await Category.findOne({name:leafcategory,ancestors:{$all :[maincategoryId._id,subcategoryId._id]}});
-      if (!leafcategoryId) {
+  const leafcategoryId = await Category.findOne({ name: leafcategory, ancestors: { $all: [maincategoryId._id, subcategoryId._id] } });
+  if (!leafcategoryId) {
     return res.status(404).json({ message: "Leaf category not found" });
   }
-      const getProduct  = await Product.find({ category:leafcategoryId._id});
-        return res.status(200).json(
+  const getProduct = await Product.find({ category: leafcategoryId._id });
+  return res.status(200).json(
     new ApiResponse(200, getProduct, "Product by category")
   );
-}) 
+})
 
- const getOnSaleProduct = asyncHandler(async(req,res)=>{
-   const saleProduct = await Product.find({onsale:true});
-    if (!saleProduct) {
-    throw new ApiError(404, "Products are not on sale   ")
+const getOnSaleProduct = asyncHandler(async (req, res) => {
+  const saleProduct = await Product.find({    discountPrice: { $ne: null } 
+  });
+  if (!saleProduct) {
+    throw new ApiError(404, "Products are not on sale")
   }
-       return res.status(200).json(
-    new ApiResponse(200, saleProduct, "Product on sale")
+  return res.status(200).json(
+    new ApiResponse(200, saleProduct, "Products on sale")
   );
- })
+})
 const removeGalleryImage = asyncHandler(async (req, res) => {
   const { id, publicId } = req.params;
 

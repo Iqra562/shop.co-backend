@@ -23,8 +23,7 @@ const productSchema = new mongoose.Schema(
         message: "Discount price must be less than or equal to price",
       },
     },
-    onsale: { type: Boolean },
-
+ 
     stock: { type: Number, required: true, default: 0 }, 
    thumbnail: {
     url: { type: String, required: true },
