@@ -36,7 +36,7 @@ const fetchParentCategories =asyncHandler(async (req,res)=>{
          )
 })
 const fetchSubCategories =asyncHandler(async (req,res)=>{
-    console.log("CategoryId:", req.params.parentId);
+    // console.log("CategoryId:", req.params.parentId);
     const { parentId } = req.params;
 
          const subCategories = await Category.find({parent:parentId});

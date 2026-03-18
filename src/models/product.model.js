@@ -5,40 +5,44 @@ const ratingSchema = new mongoose.Schema(
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String, trim: true },
   },
-  { timestamps: true }  
+  { timestamps: true }
 );
 const productSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true }, 
+    name: { type: String, required: true, trim: true },
     description: { type: String, required: true },
 
     price: { type: Number, required: true },
     discountPrice: {
       type: Number,
-      default: null, 
+      default: null,
       validate: {
-        validator: function (v) { 
+        validator: function (v) {
           return v == null || v <= this.price;
         },
         message: "Discount price must be less than or equal to price",
       },
     },
- 
-    stock: { type: Number, required: true, default: 0 }, 
-   thumbnail: {
-    url: { type: String, required: true },
-    public_id: { type: String, required: true }
-  },
+    onsale:{
+      type:Boolean,
+      default:false
+    },
 
-   galleryImages: [
-    {
-      url: { type: String },
-      public_id: { type: String }
-    }
-  ],
-   category: {
+    stock: { type: Number, required: true, default: 0 },
+    thumbnail: {
+      url: { type: String, required: true },
+      public_id: { type: String, required: true }
+    },
+
+    galleryImages: [
+      {
+        url: { type: String },
+        public_id: { type: String }
+      }
+    ],
+    category: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Category", 
+      ref: "Category",
       required: true
     },
 
@@ -49,4 +53,4 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Product =  mongoose.model("Product", productSchema);
+export const Product = mongoose.model("Product", productSchema);
