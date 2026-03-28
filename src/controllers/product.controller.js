@@ -6,7 +6,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { removeFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getProduct = asyncHandler(async (req, res) => {
-  const products = await Product.find();
+  const products = await Product.find().populate('category', 'name slug level parent')
+;
   if (!products || products.length === 0) {
     throw new ApiError(404, "No products found");
   }
