@@ -29,7 +29,9 @@ const registerUser = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'All feilds are required')
       }
       let user = await User.findOne({ email })
-      
+            if (user) {
+            throw new ApiError(409, "User with email  already exists", "EMAIL_ALREADY_EXISTS")
+      }
 
       if(!user){
 
@@ -41,9 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
             })
             
       }
-      // if (user.isVerified ) {
-      //       throw new ApiError(409, "User with email  already exists", "EMAIL_ALREADY_EXISTS")
-      // }
+
       // const otpCode = user.generateOTP();
       // user.otpCode = user.hashOTP(otpCode);
 
