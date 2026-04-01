@@ -126,7 +126,7 @@ const verifyUser = asyncHandler(async (req, res) => {
 })
 const loginUser = asyncHandler(async (req, res) => {
       const { email, password } = req.body
-      if (!(email)) {
+if (!email || !password) {
             throw new ApiError(400, "Email is required", "EMAIL_REQUIRED")
       }
 
