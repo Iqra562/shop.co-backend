@@ -5,28 +5,38 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const addCategory = asyncHandler(async (req, res) => {
-    const { name, slug, level, parentId, ancestors } = req.body;
+    const { name, level, parentId, ancestors } = req.body;
+    let slug;
     if (
-        [name, slug,].some((field) => !field || field.trim() === "") ||
+        [name].some((field) => !field || field.trim() === "") ||
         [level].some((field) => field == null)
     ) {
         throw new ApiError(400, 'All feilds are required')
     }
 
+    if (parentId === null) {
+        slug = name;
+    } else {
+        const parentCategory = await Category.findById(parentId);
+        const mainParent = parentCategory.parent
+    ? await Category.findById(parentCategory.parent)
+    : null;
+            if (!parentCategory) {
+            throw new ApiError(404, "Parent category not found");
+        }
+
+        slug = mainParent.name ? mainParent.name + "-" + parentCategory.name + "-" + name : parentCategory.name + "-" +    name;
+    }
     const category = await Category.create({
-        name: name.toLowerCase(),
-        slug, level, parent: parentId, ancestors
+        name: name.toLowerCase(), level, parent: parentId, ancestors,
+        slug
 
     })
 
-    const createdCategory = await Category.findById(category._id);
-    if (!createdCategory) {
-        throw new ApiError(500, 'There is an error while adding a category')
-
-    }
+   
 
     return res.status(201).json(
-        new ApiResponse(200, createdCategory, "Category added successfully!")
+        new ApiResponse(200, category, "Category added successfully!")
     )
 })
 
@@ -39,7 +49,7 @@ const fetchParentCategories = asyncHandler(async (req, res) => {
 const fetchSubCategories = asyncHandler(async (req, res) => {
     // console.log("CategoryId:", req.params.parentId);
     const { parentId } = req.params;
-   const parent = parentId === "null" ? null : parentId;
+    const parent = parentId === "null" ? null : parentId;
 
     const subCategories = await Category.find({ parent: parent });
     return res.status(200).json(
@@ -92,7 +102,7 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
 
     const products = await
         Product.find(filter)
-            .populate('category', 'name slug level parent')
+            .populate('category', 'name level parent')
 
 
     res.status(200).json(

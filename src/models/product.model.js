@@ -23,9 +23,9 @@ const productSchema = new mongoose.Schema(
         message: "Discount price must be less than or equal to price",
       },
     },
-    onsale:{
-      type:Boolean,
-      default:false
+    onsale: {
+      type: Boolean,
+      default: false
     },
 
     stock: { type: Number, required: true, default: 0 },
