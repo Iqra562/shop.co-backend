@@ -14,7 +14,7 @@ router.route('/get-product-by-id/:id').get(getProductById);
 
 router.route('/add-product').post(verifyJWT, authorizeRoles("admin"), upload.fields([
     { name: "thumbnail", maxCount: 1 },
-    { name: "galleryImages", maxCount: 4 }
+    { name: "galleryImages", maxCount: 10 }
 ]), addProduct)
 
 

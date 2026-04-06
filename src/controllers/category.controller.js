@@ -15,25 +15,35 @@ const addCategory = asyncHandler(async (req, res) => {
     }
 
     if (parentId === null) {
-        slug = name;
+        slug = name.toLowerCase();
     } else {
         const parentCategory = await Category.findById(parentId);
-        const mainParent = parentCategory.parent
-    ? await Category.findById(parentCategory.parent)
-    : null;
-            if (!parentCategory) {
+
+        if (!parentCategory) {
             throw new ApiError(404, "Parent category not found");
         }
 
-        slug = mainParent.name ? mainParent.name + "-" + parentCategory.name + "-" + name : parentCategory.name + "-" +    name;
+        let mainParent = null;
+
+        if (parentCategory.parent !== null) {
+            mainParent = await Category.findById(parentCategory.parent);
+        }
+
+        if (mainParent && mainParent.name) {
+            slug = `${mainParent.name.toLowerCase()}-${parentCategory.name.toLowerCase()}-${name.toLowerCase()}`;
+        } else {
+            slug = `${parentCategory.name.toLowerCase()}-${name.toLowerCase()}`;
+        }
     }
+
+
     const category = await Category.create({
         name: name.toLowerCase(), level, parent: parentId, ancestors,
         slug
 
     })
 
-   
+
 
     return res.status(201).json(
         new ApiResponse(200, category, "Category added successfully!")
@@ -103,7 +113,9 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
     const products = await
         Product.find(filter)
             .populate('category', 'name level parent')
-
+if (!products || products.length === 0) {
+    throw new ApiError(404, 'Products not found');
+}
 
     res.status(200).json(
 

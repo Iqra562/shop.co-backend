@@ -29,61 +29,62 @@ const getProductById = asyncHandler(async (req, res) => {
 });
 
 
-const addProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, discountPrice, stock, category } = req.body;
-  if (
-    [name, description].some((field) => !field || field.trim() === "") ||
-    [price, stock, category].some((field) => field == null)
-  ) {
-    throw new ApiError(400, 'All feilds are required')
-  }
-  // Upload thumbnail to Cloudinary
+  const addProduct = asyncHandler(async (req, res) => {
+    const { name, description, price, discountPrice, stock, category } = req.body;
+    if (
+      [name, description].some((field) => !field || field.trim() === "") ||
+      [price, stock, category].some((field) => field == null)
+    ) {
+      throw new ApiError(400, 'All feilds are required')
+    }
+    // Upload thumbnail to Cloudinary
 
-  let thumbnail = null;
-  if (req.files?.thumbnail?.[0]) {
-    const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
-    thumbnail = { url: uploadedThumbnail.secure_url, public_id: uploadedThumbnail.public_id }
-  }
+    let thumbnail = null;
+    if (req.files?.thumbnail?.[0]) {
+      const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
+      thumbnail = { url: uploadedThumbnail.secure_url, public_id: uploadedThumbnail.public_id }
+    }
 
-  if (!thumbnail) {
-    throw new ApiError(400, "thumbnail file is required")
-  }
-  // Upload multiple images (array of promises)
-  let imageUrls = [];
-  if (req.files?.galleryImages) {
-    // console.log(req.files?.galleryImages )
-    imageUrls = await Promise.all(
-      req.files.galleryImages.map(async (file) => {
+    if (!thumbnail) {
+      throw new ApiError(400, "thumbnail file is required")
+    }
+    // Upload multiple images (array of promises)
+    let imageUrls = [];
+    if (req.files?.galleryImages) {
+      // console.log(req.files?.galleryImages )
+      imageUrls = await Promise.all(
+        req.files.galleryImages.map(async (file) => {
 
-        const uploaded = await uploadOnCloudinary(file.path);
-        if (!uploaded) {
-          throw new ApiError(500, "Failed to upload one of the images");
+          const uploaded = await uploadOnCloudinary(file.path);
+          if (!uploaded) {
+            throw new ApiError(500, "Failed to upload one of the images");
+          }
+          return { url: uploaded.secure_url, public_id: uploaded.public_id }
         }
-        return { url: uploaded.secure_url, public_id: uploaded.public_id }
-      }
-      )
-    );
-  }
-  console.log("Images:", imageUrls);
+        )
+      ); 
+    }
+    console.log("Images:", imageUrls);
 
+  const onSale = discountPrice != null && discountPrice > 0;
+    const product = await Product.create({
+      name, description, price, discountPrice, stock,
+      thumbnail,
+      onsale:onSale,
+      galleryImages: imageUrls, category
 
-  const product = await Product.create({
-    name, description, price, discountPrice, stock,
-    thumbnail,
-    galleryImages: imageUrls, category
+    })
+    const createdProduct = await Product.findById(product._id)
+    if (!createdProduct) {
+      throw new ApiError(500, "Something went wrong")
+
+    }
+
+    return res.status(201).json(
+      new ApiResponse(200, createdProduct, "Product added successfully  ")
+    )
 
   })
-  const createdProduct = await Product.findById(product._id)
-  if (!createdProduct) {
-    throw new ApiError(500, "Something went wrong")
-
-  }
-
-  return res.status(201).json(
-    new ApiResponse(200, createdProduct, "Product added successfully  ")
-  )
-
-})
 
 
 const updateProduct = asyncHandler(async (req, res) => {
