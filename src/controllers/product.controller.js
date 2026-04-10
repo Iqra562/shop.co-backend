@@ -17,7 +17,12 @@ const getProduct = asyncHandler(async (req, res) => {
 })
 const getProductById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const product = await Product.findById(id);
+  const product = await Product.findById(id).populate({
+  path: "category",
+  populate: {
+    path: "ancestors",
+  },
+});;
 
   if (!product) {
     throw new ApiError(404, "Product not found");
@@ -94,22 +99,22 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (!product) {
     throw new ApiError(404, "Product not found")
   }
-  const { name, description, price, discountPrice, stock } = req.body;
-  if (
-    [name, description].some((field) => !field || field.trim() === "") ||
-    [price, stock].some((field) => field == null)
-  ) {
-    throw new ApiError(400, 'All feilds are required')
-  }
-  product.name = name;
-  product.description = description;
-  product.price = price;
-  product.discountPrice = discountPrice;
-  product.stock = stock;
-
+  const { name, description, price, discountPrice, stock,category } = req.body;
+  
+  if (name) product.name = name;
+  if (description) product.description = description;
+  if (price != null) product.price = price;
+  if (discountPrice != null) product.discountPrice = discountPrice;
+  if (stock != null) product.stock = stock;
+  if(category != null) product.category = category;
+  const onSale = discountPrice != null && discountPrice > 0;
+  product.onsale = onSale;
 
   if (req.files?.thumbnail?.[0]) {
     const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
+      if (!uploadedThumbnail) {
+      throw new ApiError(500, "Thumbnail upload failed");
+    }
     if (product.thumbnail?.public_id) {
       await removeFromCloudinary(product.thumbnail.public_id);
     }
@@ -126,6 +131,9 @@ const updateProduct = asyncHandler(async (req, res) => {
     const uploadedImages = await Promise.all(
       req.files.galleryImages.map(async (file) => {
         const uploaded = await uploadOnCloudinary(file.path);
+        if (!uploaded) {
+          throw new ApiError(500, "Gallery image upload failed");
+        }
         return { url: uploaded.secure_url, public_id: uploaded.public_id };
       })
     );
