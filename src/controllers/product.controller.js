@@ -47,6 +47,9 @@ const getProductById = asyncHandler(async (req, res) => {
     let thumbnail = null;
     if (req.files?.thumbnail?.[0]) {
       const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
+         if (!uploadedThumbnail) {
+            throw new ApiError(500, "Failed to upload thumbnail image");
+          }
       thumbnail = { url: uploadedThumbnail.secure_url, public_id: uploadedThumbnail.public_id }
     }
 
@@ -114,7 +117,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     const uploadedThumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path);
       if (!uploadedThumbnail) {
       throw new ApiError(500, "Thumbnail upload failed");
-    }
+    } 
     if (product.thumbnail?.public_id) {
       await removeFromCloudinary(product.thumbnail.public_id);
     }
@@ -173,7 +176,7 @@ const getProductByCategory = asyncHandler(async (req, res) => {
 })
 
 const getOnSaleProduct = asyncHandler(async (req, res) => {
-  const saleProduct = await Product.find({    discountPrice: { $ne: null } 
+  const saleProduct = await Product.find({    onsale: { $ne: false } 
   });
   if (!saleProduct) {
     throw new ApiError(404, "Products are not on sale")
@@ -183,24 +186,24 @@ const getOnSaleProduct = asyncHandler(async (req, res) => {
   );
 })
 const removeGalleryImage = asyncHandler(async (req, res) => {
-  const { id, publicId } = req.params;
+  const { productId, imageId } = req.params;
 
-  const product = await Product.findById(id);
+  const product = await Product.findById(productId);
   if (!product) {
     throw new ApiError(404, "Product not found");
   }
 
   // check if image exists
-  const image = product.galleryImages.find(img => img.public_id === publicId);
+  const image = product.galleryImages.find(img => img.public_id === imageId);
   if (!image) {
     throw new ApiError(404, "Image not found in product");
   }
 
   // 1. remove from Cloudinary
-  await removeFromCloudinary(publicId);
+  await removeFromCloudinary(imageId);
 
   // 2. remove from product.images array
-  product.galleryImages = product.galleryImages.filter(img => img.public_id !== publicId);
+  product.galleryImages = product.galleryImages.filter(img => img.public_id !== imageId);
 
   await product.save();
 

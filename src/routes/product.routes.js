@@ -20,10 +20,10 @@ router.route('/add-product').post(verifyJWT, authorizeRoles("admin"), upload.fie
 
 router.route('/update-product/:id').put(verifyJWT, authorizeRoles("admin"), upload.fields([
     { name: "thumbnail", maxCount: 1 },
-    { name: "galleryImages", maxCount: 4 }
+    { name: "galleryImages", maxCount: 10 }
 ]), updateProduct)
 
-router.route('/update-product/:id/remove-img/:publicId').put(verifyJWT, authorizeRoles("admin"), removeGalleryImage)
+router.route('/remove-gallery-image/:productId/:imageId').put(verifyJWT, authorizeRoles("admin"), removeGalleryImage)
 router.route('/delete-product/:id').delete(verifyJWT, authorizeRoles("admin"), deleteProduct)
 router.route('/product-by-category').get( getProductByCategory)
 router.route('/product-on-sale').get(getOnSaleProduct)
