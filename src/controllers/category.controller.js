@@ -94,6 +94,7 @@ const getDescendantIds = async (categoryId) => {
 
 const getProductsByCategory = asyncHandler(async (req, res) => {
     const { categoryId } = req.params;
+    const { minPrice, maxPrice, sortBy, onSale } = req.query;
 
 
     const category = await Category.findById(categoryId);
@@ -104,18 +105,37 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
 
     const categoryIds = await getDescendantIds(categoryId);
 
-    const filter = {
+    let filter = {
         category: { $in: categoryIds },
     };
 
 
+    if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+    if (onSale === "true") {
+        filter.onsale = true;
+    }
+
+    let sortOptions = {};
+
+    if (sortBy === "latest") {
+        sortOptions.createdAt = -1;
+    } else if (sortBy === "price_low_high") {
+        sortOptions.price = 1;
+    } else if (sortBy === "price_high_low") {
+        sortOptions.price = -1;
+    }
 
     const products = await
         Product.find(filter)
+            .sort(sortOptions)
             .populate('category', 'name level parent')
-if (!products || products.length === 0) {
-    throw new ApiError(404, 'Products not found');
-}
+    if (!products || products.length === 0) {
+        throw new ApiError(404, 'Products not found');
+    }
 
     res.status(200).json(
 
