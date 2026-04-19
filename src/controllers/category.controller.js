@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Category } from "../models/category.model.js";
 import { Product } from "../models/product.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -92,6 +93,58 @@ const getDescendantIds = async (categoryId) => {
     return result;
 };
 
+// const getProductsByCategory = asyncHandler(async (req, res) => {
+//     const { categoryId } = req.params;
+//     const { minPrice, maxPrice, sortBy, onSale } = req.query;
+
+
+//     const category = await Category.findById(categoryId);
+//     if (!category) {
+//         throw new ApiError(404, 'Category not found')
+
+//     }
+
+//     const categoryIds = await getDescendantIds(categoryId);
+
+//     let filter = {
+//         category: { $in: categoryIds },
+//     };
+
+
+//     if (minPrice || maxPrice) {
+//         filter.price = {};
+//         if (minPrice) filter.price.$gte = Number(minPrice);
+//         if (maxPrice) filter.price.$lte = Number(maxPrice);
+//     }
+//     if (onSale === "true") {
+//         filter.onsale = true;
+//     }
+
+//     let sortOptions = {};
+
+//     if (sortBy === "latest") {
+//         sortOptions.createdAt = -1;
+//     } else if (sortBy === "price_low_high") {
+//         sortOptions.price = 1;
+//     } else if (sortBy === "price_high_low") {
+//         sortOptions.price = -1;
+//     }
+
+//     const products = await
+//         Product.find(filter)
+//             .sort(sortOptions)
+//             .populate('category', 'name level parent')
+//     if (!products || products.length === 0) {
+//         throw new ApiError(404, 'Products not found');
+//     }
+
+//     res.status(200).json(
+
+//         new ApiResponse(200, products, "Product by category fetched successfully!")
+//     );
+
+
+// })
 const getProductsByCategory = asyncHandler(async (req, res) => {
     const { categoryId } = req.params;
     const { minPrice, maxPrice, sortBy, onSale } = req.query;
@@ -104,9 +157,9 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
     }
 
     const categoryIds = await getDescendantIds(categoryId);
-
+    const objectIdCategoryIds = categoryIds.map(id => new mongoose.Types.ObjectId(id));
     let filter = {
-        category: { $in: categoryIds },
+        category: { $in: objectIdCategoryIds },
     };
 
 
@@ -119,20 +172,35 @@ const getProductsByCategory = asyncHandler(async (req, res) => {
         filter.onsale = true;
     }
 
-    let sortOptions = {};
+   
+    let sortStage = null;
 
-    if (sortBy === "latest") {
-        sortOptions.createdAt = -1;
-    } else if (sortBy === "price_low_high") {
-        sortOptions.price = 1;
+    if (sortBy === "price_low_high") {
+        sortStage = { discountedPrice: 1 };
     } else if (sortBy === "price_high_low") {
-        sortOptions.price = -1;
+        sortStage = { discountedPrice: -1 };
+    } else if (sortBy === "latest") {
+        sortStage = { createdAt: -1 };
     }
-
-    const products = await
-        Product.find(filter)
-            .sort(sortOptions)
-            .populate('category', 'name level parent')
+    const products = await Product.aggregate([
+        { $match: filter },
+        {
+            $addFields:
+            {
+                discountedPrice:
+                {
+                    $cond:
+                    {
+                        if:
+                            { $gt: ["$discountPrice", 0] },
+                        then: { $subtract: ["$price", { $multiply: ["$price", { $divide: ["$discountPrice", 100] }] }] },
+                        else: "$price"
+                    }
+                }
+            }
+        },
+        ...(sortStage ? [{ $sort: sortStage }] : []),
+        { $lookup: { from: "categories", localField: "category", foreignField: "_id", as: "category" } }, { $unwind: "$category" }]);
     if (!products || products.length === 0) {
         throw new ApiError(404, 'Products not found');
     }
