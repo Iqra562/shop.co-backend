@@ -35,7 +35,7 @@ const createOrder = asyncHandler(async(req,res)=>{
   const createOrder = await Order.create({
     user:userId,
     items:orderItems,
-    // shippingAddress:shippingAddress,
+    shippingAddress:shippingAddress,
     totalAmount 
   })
   return res.status(201).json(

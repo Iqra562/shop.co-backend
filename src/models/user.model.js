@@ -13,7 +13,7 @@ const addressSchema = new mongoose.Schema({
 });
 
 const userSchema = new Schema({
-   name: {
+   name: { 
       type: String,
       required: true,
       lowercase: true,
