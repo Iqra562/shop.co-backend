@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireVerifiedUser, verifyJWT } from "../middlewares/auth.middleware.js";
-import { createOrder, getOrder, getOrderById, updateOrderStatus, updatePaymentMethod, updatePaymentStatus } from "../controllers/order.controller.js";
+import { createOrder, getOrder, getOrderById, getSingleOrder, updateOrderStatus, updatePaymentMethod, updatePaymentStatus } from "../controllers/order.controller.js";
 
 const router = Router();
 
@@ -10,4 +10,5 @@ router.route('/get-order-by-id').get(verifyJWT,getOrderById)
 router.route('/update-payment-method').put(verifyJWT,updatePaymentMethod)
 router.route('/update-payment-status/:orderId').put(verifyJWT,updatePaymentStatus)
 router.route('/update-order-status/:orderId').put(verifyJWT,updateOrderStatus)
+router.route('/get-single-order/:orderId').get(verifyJWT,getSingleOrder)
 export default router

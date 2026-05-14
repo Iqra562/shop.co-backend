@@ -68,6 +68,20 @@ const orders = await Order.find({ user: userId});
 
 })
 
+
+const getSingleOrder = asyncHandler(async(req,res)=>{
+  const {orderId} = req.params;
+  const order = await Order.findById(orderId);
+  if(!order){
+  throw new ApiError(404, "order not found");
+
+  }
+  return res.status(200).json(
+    new ApiResponse(200, order, "Order fetched successfully")
+  )
+
+})
+
 const updatePaymentMethod = asyncHandler(async(req,res)=>{
    const {paymentMethod} = req.body;
     const { orderId } = req.params;
@@ -138,5 +152,6 @@ const updateOrderStatus = asyncHandler(async(req,res)=>{
 })
 
 export {
-    getOrder,createOrder,getOrderById, updatePaymentMethod,updatePaymentStatus,updateOrderStatus
+    getOrder,createOrder,getOrderById, updatePaymentMethod,updatePaymentStatus,updateOrderStatus,
+    getSingleOrder
 }
